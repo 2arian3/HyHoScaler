@@ -1,4 +1,6 @@
 from autoscaler.monitor import *
 
 if __name__ == '__main__':
-    print(get_all_pods())
+    p_monitor = PodsMonitor()
+
+    print(p_monitor.get_pods_cpu_usage())
