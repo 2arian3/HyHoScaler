@@ -23,7 +23,7 @@ class PodCpuUsage:
 
     def __init__(self, name, cpu_usage, captured_time, deployment, namespace="default"):
         self.name = name
-        self.cpu_usage = cpu_usage # in milicores
+        self.cpu_usage = cpu_usage # in millicores
         self.captured_time = captured_time
         self.deployment = deployment
         self.namespace = namespace
@@ -31,3 +31,16 @@ class PodCpuUsage:
 
     def __repr__(self) -> str:
         return f"PodCpuUsage(name={self.name}, deployment={self.deployment}, cpu_usage={self.cpu_usage}, captured_time={self.captured_time}"
+
+
+class PodCpuRequest:
+
+    def __init__(self, name, cpu_request, deployment, namespace="default"):
+        self.name = name
+        self.cpu_request = cpu_request # in millicores
+        self.deployment = deployment
+        self.namespace = namespace
+    
+
+    def __repr__(self) -> str:
+        return f"PodCpuRequest(name={self.name}, deployment={self.deployment}, cpu_request={self.cpu_request}"

@@ -3,7 +3,7 @@ import logging
 from typing import List, Dict
 
 from ..utils.env_vars import PROMETHEUS_URL
-from ..models.Deployment import Deployment
+from ..models.Deployment import Deployment, DeploymentAverageCpuUsage
 
 from kubernetes import client, config
 from prometheus_api_client import PrometheusConnect
@@ -27,7 +27,8 @@ class DeploymentsMonitor:
         deployments = api_response.items
         deployments = [Deployment(deployment.metadata.name,
                                     deployment.spec.template.spec.containers[0].image,
-                                    deployment.spec.replicas,
+                                    deployment.status.replicas,
+                                    deployment.status.ready_replicas,
                                     deployment.spec.template.spec.containers[0].ports,
                                     deployment.spec.template.spec.containers[0].env)
                             for deployment in deployments]
@@ -35,39 +36,7 @@ class DeploymentsMonitor:
         return deployments
     
 
-    def _extract_pod_count_from_query_result(self, query_result, deployment_name) -> int:
-        for res in query_result:
-            if res['name'].startswith(deployment_name):
-                return res['count']
-        # if not found, return None
-        return None
-    
-
-    def get_pods_count_by_deployment(self, deployment_name, namespace="default") -> int:
-        query = f"sum(kube_pod_info{{namespace='{namespace}'}}) by (created_by_kind,created_by_name)"
-        query_result = self.prom.custom_query(query=query)
-
-        query_result = [{'name': q['metric']['created_by_name'],'count': int(q['value'][1])} for q in query_result]
-
-        return self._extract_pod_count_from_query_result(query_result, deployment_name)
-    
-
-    def get_all_deployment_pod_counts(self, namespace="default") -> Dict[str, int]:
-        query = f"sum(kube_pod_info{{namespace='{namespace}'}}) by (created_by_kind,created_by_name)"
-        query_result = self.prom.custom_query(query=query)
-
-        query_result = [{'name': q['metric']['created_by_name'],'count': int(q['value'][1])} for q in query_result]
-
-        deployments = [deployment.name for deployment in self.get_all_deployments()]
-
-        deploy_pod_counts = {}
-        for d in deployments:
-            deploy_pod_counts[d] = self._extract_pod_count_from_query_result(query_result, d)
-
-        return deploy_pod_counts
-    
-
-    def get_all_deployments_cpu_usage(self) -> Dict[str, float]:
+    def _get_all_deployments_cpu_usage(self) -> Dict[str, float]:
         query = """
                 sum(
                 irate(container_cpu_usage_seconds_total{cluster="", namespace="default"}[2m])
@@ -86,3 +55,26 @@ class DeploymentsMonitor:
             if d not in filtered_cpu_query:
                 filtered_cpu_query[d] = None
         return filtered_cpu_query
+    
+
+    def get_deployments_average_cpu_usage(self) -> List[DeploymentAverageCpuUsage]:
+        query = """
+                sum(
+                irate(container_cpu_usage_seconds_total{cluster="", namespace="default"}[2m])
+                * on(namespace,pod)
+                group_left(workload, workload_type) namespace_workload_pod:kube_pod_owner:relabel{cluster="", namespace="default", workload_type="deployment"}
+                ) by (workload, workload_type)
+                """
+        
+        deployments = self.get_all_deployments()
+
+        query_result = self.prom.custom_query(query=query)
+        query_result = {q['metric']['workload']: [float(q['value'][1])*1000, float(q['value'][0])] for q in query_result}
+        average_cpu_usages = []
+
+        for deployment in deployments:
+            deployment_name = deployment.name
+            if deployment_name in query_result:
+                average_cpu_usages.append(DeploymentAverageCpuUsage(deployment_name, query_result[deployment_name][0], deployment.ready_replicas, query_result[deployment_name][1]))
+
+        return average_cpu_usages
