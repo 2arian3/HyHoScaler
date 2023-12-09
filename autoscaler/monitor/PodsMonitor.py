@@ -1,5 +1,3 @@
-import time
-import logging
 from typing import List
 
 from ..models.Pod import Pod, PodCpuUsage, PodCpuRequest

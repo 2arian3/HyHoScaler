@@ -1,7 +1,8 @@
 from autoscaler.monitor import *
+from autoscaler.scaler import *
+from autoscaler.controller import *
+from autoscaler.logger import Logger
+
 
 if __name__ == '__main__':
-    p_monitor = PodsMonitor()
-    d_monitor = DeploymentsMonitor()
-
-    print(d_monitor.get_deployments_average_cpu_usage())
+    check_deployments_cpu_usage()

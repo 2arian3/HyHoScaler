@@ -1,16 +1,20 @@
 class Deployment:
 
-    def __init__(self, name, image, replicas, ready_replicas, ports, env):
+    def __init__(self, name, image, replicas, ready_replicas, cpu_request, memory_request, cpu_limit, memory_limit, ports, env):
         self.name = name
         self.image = image
         self.replicas = replicas
         self.ready_replicas = ready_replicas
+        self.cpu_limit = cpu_limit # in millicores
+        self.memory_limit = memory_limit
+        self.cpu_request = cpu_request # in millicores
+        self.memory_request = memory_request
         self.ports = ports
         self.env = env
 
     
     def __repr__(self) -> str:
-        return f"Deployment(name={self.name}, replicas={self.replicas}, ready_replicas={self.ready_replicas})"
+        return f"Deployment(name={self.name}, replicas={self.replicas}, ready_replicas={self.ready_replicas}, cpu_request={self.cpu_request}, memory_request={self.memory_request}, cpu_limit={self.cpu_limit}, memory_limit={self.memory_limit})"
     
 
 class DeploymentAverageCpuUsage:
