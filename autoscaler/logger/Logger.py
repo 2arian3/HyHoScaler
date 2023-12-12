@@ -1,7 +1,9 @@
 import logging
 
+from ..utils.env_vars import PWD
+
 class Logger:
-    LOG_PATH = './app.log'
+    LOG_PATH = f"{PWD}/autoscaler.log"
 
     logging.basicConfig(filename=LOG_PATH,
                         level=logging.INFO,
