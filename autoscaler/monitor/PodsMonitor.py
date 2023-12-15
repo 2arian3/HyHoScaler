@@ -1,6 +1,6 @@
 from typing import List
 
-from ..models.Pod import Pod, PodCpuUsage, PodCpuRequest
+from ..models.Pod import Pod, PodCpuUsage, PodCpuResource, PodMemoryResource
 from ..utils.env_vars import PROMETHEUS_URL
 
 from prometheus_api_client import PrometheusConnect
@@ -26,19 +26,38 @@ class PodsMonitor:
         return pods
 
     
-    def get_pods_cpu_request(self, namespace="default") -> List[PodCpuRequest]:
+    def get_pods_cpu_resource(self, namespace="default") -> List[PodCpuResource]:
         api_response = self.api_instance.list_pod_for_all_namespaces()
         pods = api_response.items
 
-        cpu_requests = []
+        cpu_resources = []
         for pod in pods:
-            if pod.spec.containers[0].resources.requests and 'cpu' in pod.spec.containers[0].resources.requests:
+            if pod.spec.containers[0].resources.requests and 'cpu' in pod.spec.containers[0].resources.requests \
+                and pod.spec.containers[0].resources.limits and 'cpu' in pod.spec.containers[0].resources.limits:
                 converted_cpu_request = float(pod.spec.containers[0].resources.requests['cpu'].replace('m', ''))
-                cpu_requests.append(PodCpuRequest(pod.metadata.name, converted_cpu_request, pod.metadata.name.split('-')[0], pod.metadata.namespace))
+                converted_cpu_limit = float(pod.spec.containers[0].resources.limits['cpu'].replace('m', ''))
+                cpu_resources.append(PodCpuResource(pod.metadata.name, converted_cpu_request, converted_cpu_limit, pod.metadata.name.split('-')[0], pod.metadata.namespace))
             else:
-                cpu_requests.append(PodCpuRequest(pod.metadata.name, None, pod.metadata.name.split('-')[0], pod.metadata.namespace))
+                cpu_resources.append(PodCpuResource(pod.metadata.name, None, None, pod.metadata.name.split('-')[0], pod.metadata.namespace))
 
-        return cpu_requests
+        return cpu_resources
+    
+
+    def get_pods_memory_resource(self, namespace="default") -> List[PodMemoryResource]:
+        api_response = self.api_instance.list_pod_for_all_namespaces()
+        pods = api_response.items
+
+        memory_resources = []
+        for pod in pods:
+            if pod.spec.containers[0].resources.requests and 'memory' in pod.spec.containers[0].resources.requests \
+                and pod.spec.containers[0].resources.limits and 'memory' in pod.spec.containers[0].resources.limits:
+                converted_memory_request = float(pod.spec.containers[0].resources.requests['memory'].replace('Gi', '')) * 1024 if 'Gi' in pod.spec.containers[0].resources.requests['memory'] else float(pod.spec.containers[0].resources.requests['memory'].replace('Mi', ''))
+                converted_memory_limit = float(pod.spec.containers[0].resources.limits['memory'].replace('Gi', '')) * 1024 if 'Gi' in pod.spec.containers[0].resources.requests['memory'] else float(pod.spec.containers[0].resources.requests['memory'].replace('Mi', ''))
+                memory_resources.append(PodMemoryResource(pod.metadata.name, converted_memory_request, converted_memory_limit, pod.metadata.name.split('-')[0], pod.metadata.namespace))
+            else:
+                memory_resources.append(PodMemoryResource(pod.metadata.name, None, None, pod.metadata.name.split('-')[0], pod.metadata.namespace))
+
+        return memory_resources
 
 
     def get_pods_by_service(self, service) -> List[Pod]:
