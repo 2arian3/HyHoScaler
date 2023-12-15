@@ -21,7 +21,7 @@ class DeploymentAverageCpuUsage:
 
     def __init__(self, name, total_cpu_usage, replicas, captured_time, namespace="default"):
         self.name = name
-        self.average_cpu_usage = total_cpu_usage / replicas # in millicores
+        self.average_cpu_usage = total_cpu_usage / replicas if replicas is not None else total_cpu_usage # in millicores
         self.replicas = replicas
         self.captured_time = captured_time
         self.namespace = namespace
@@ -34,7 +34,7 @@ class DeploymentAverageMemoryUsage:
 
     def __init__(self, name, total_memory_usage, replicas, captured_time, namespace="default"):
         self.name = name
-        self.average_memory_usage = total_memory_usage / replicas # in Mi
+        self.average_memory_usage = total_memory_usage / replicas if replicas is not None else total_memory_usage # in Mi
         self.replicas = replicas
         self.captured_time = captured_time
         self.namespace = namespace
