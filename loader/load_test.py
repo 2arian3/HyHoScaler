@@ -44,7 +44,7 @@ def start():
     loop_timer = TimerClass()
     total_timer = TimerClass()
 
-    user_sequence = [50,100,500,1000,1000,1000,500,100,50,50]
+    user_sequence = [50, 100, 500, 800, 800, 400, 100, 50, 50]
 
     lt = PACSLoadTester(hatch_rate=1000, temp_stat_max_len=60)
     # add the custom sensing function
@@ -55,7 +55,7 @@ def start():
     time.sleep(10)
     lt.start_capturing()
 
-    loop_time_in_secs = get_loop_time_in_secs('30s')
+    loop_time_in_secs = get_loop_time_in_secs('60s')
 
     loop_timer.tic()
     total_timer.tic()
@@ -117,30 +117,3 @@ def start():
     plt.xlabel('Time (minutes)')
     plt.ylabel('Fail Per Second')
     plt.savefig(filename)
-
-
-    # plot_deploy_list = [
-    # 'frontend',
-    # 'checkoutservice',
-    # 'cartservice',
-    # 'currencyservice',
-    # 'recommendationservice',
-    # 'productcatalogservice'
-    # ]
-
-    # for d in plot_deploy_list:
-    #     plt.figure(figsize=(8, 12))
-    #     plt.subplot(311)
-    #     plt.plot(res['elapsed_min'], res[f'custom_cpu_{d}'])
-    #     plt.xlabel('Time (minutes)')
-    #     plt.ylabel(f'CPU Usage ({d})')
-    #     plt.subplot(312)
-    #     plt.plot(res['elapsed_min'], res[f'custom_cpu_{d}'] / res[f'custom_kubernetes_{d}_ready'])
-    #     plt.xlabel('Time (minutes)')
-    #     plt.ylabel(f'CPU Usage Per Container ({d})')
-    #     plt.subplot(313)
-    #     plt.plot(res['elapsed_min'], res[f'custom_kubernetes_{d}_ordered'], label='ordered')
-    #     plt.plot(res['elapsed_min'], res[f'custom_kubernetes_{d}_ready'], label='ready')
-    #     plt.xlabel('Time (minutes)')
-    #     plt.ylabel(f'Pod Count ({d})')
-    #     plt.legend()

@@ -34,8 +34,9 @@ def check_deployments_cpu_usage():
         if deployment.name in deployments_utilization:
             required_replicas = math.ceil(deployments_utilization[deployment.name] / SCALING_OUT_CPU_THRESHOLD)
             deployment_cpu_usage = deployments_cpu_usage[deployment.name].average_cpu_usage
-            print(deployment.name, deployments_utilization[deployment.name], deployment_cpu_usage / 1000, required_replicas)
+
             if required_replicas > deployment.ready_replicas:
+                # Avoiding ping-pong effect
                 if abs((deployment_cpu_usage / 1000) / SCALING_OUT_CPU_THRESHOLD - 1) > PING_PONG_EFFECT_THRESHOLD:
                     Logger.warning(f"Required replicas for deployment {deployment.name} is {required_replicas} which is higher than {SCALING_OUT_CPU_THRESHOLD}")
                     scaler.set_replica_num(required_replicas, deployment.name)
