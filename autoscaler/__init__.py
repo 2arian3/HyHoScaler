@@ -8,6 +8,6 @@ from .controller import *
 def initialize_autoscaler():
 
     while True:
-        print(DeploymentsMonitor().get_deployments_average_cpu_usage())
-        check_deployments_cpu_usage()
+        scaled_deploys = check_deployments_cpu_usage()
+        scaled_deploys = check_deployments_memory_usage(scaled_deploys)
         time.sleep(30)

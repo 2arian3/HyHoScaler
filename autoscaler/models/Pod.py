@@ -45,7 +45,21 @@ class PodCpuResource:
 
     def __repr__(self) -> str:
         return f"PodCpuResource(name={self.name}, deployment={self.deployment}, cpu_request={self.cpu_request}, cpu_limit={self.cpu_limit}"
+
+
+class PodMemoryUsage:
+
+    def __init__(self, name, memory_usage, captured_time, deployment, namespace="default"):
+        self.name = name
+        self.memory_usage = memory_usage # in Mi
+        self.captured_time = captured_time
+        self.deployment = deployment
+        self.namespace = namespace
     
+
+    def __repr__(self) -> str:
+        return f"PodMemoryUsage(name={self.name}, deployment={self.deployment}, memory_usage={self.memory_usage}, captured_time={self.captured_time}"
+
 
 class PodMemoryResource:
 

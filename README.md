@@ -1,1 +1,1 @@
-# HySmartScaler
+# HyHoScaler

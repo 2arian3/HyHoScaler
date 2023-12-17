@@ -6,6 +6,7 @@ from ..models.Deployment import (Deployment,
                                 DeploymentAverageMemoryUsage)
 from ..models.Pod import (PodCpuUsage,
                           PodCpuResource,
+                          PodMemoryUsage,
                           PodMemoryResource)
 
 from kubernetes import client, config
@@ -161,3 +162,24 @@ class DeploymentsMonitor:
         total_cpu_utilization = dict(filter(lambda deployment: deployment[1] > 0, total_cpu_utilization.items()))
 
         return total_cpu_utilization
+    
+
+    def get_deployments_total_memory_utilization(self, pods_memory_usage: List[PodMemoryUsage], pods_memory_request: List[PodMemoryResource]) -> Dict[str, float]:
+        deployments = self.get_all_deployments()
+
+        total_memory_utilization = {deployment.name: 0 for deployment in deployments}
+
+        for deployment in deployments:
+            pods_u = filter(lambda pod: deployment.name in pod.name, pods_memory_usage)
+            pods_r = filter(lambda pod: deployment.name in pod.name, pods_memory_request)
+
+            pods_u = {pod.name: pod.memory_usage for pod in pods_u}
+            pods_r = {pod.name: pod.memory_request for pod in pods_r}
+
+            for name in pods_u:
+                if name in pods_r:
+                    total_memory_utilization[deployment.name] += pods_u[name] / pods_r[name]
+        
+        total_memory_utilization = dict(filter(lambda deployment: deployment[1] > 0, total_memory_utilization.items()))
+
+        return total_memory_utilization

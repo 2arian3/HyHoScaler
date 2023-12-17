@@ -1,6 +1,6 @@
 from typing import List
 
-from ..models.Pod import Pod, PodCpuUsage, PodCpuResource, PodMemoryResource
+from ..models.Pod import Pod, PodCpuUsage, PodCpuResource, PodMemoryUsage, PodMemoryResource
 from ..utils.env_vars import PROMETHEUS_URL
 
 from prometheus_api_client import PrometheusConnect
@@ -100,3 +100,19 @@ class PodsMonitor:
             cpu_usages.append(PodCpuUsage(pod_name, float(result['value'][1]) * 1000, float(result['value'][0]), pod_name.split('-')[0]))
             
         return cpu_usages
+    
+
+    def get_pods_memory_usage(self, deployment_name=None) -> List[PodMemoryUsage]:
+        if deployment_name:
+            query = f'sum(container_memory_usage_bytes{{cluster="", namespace="default", pod=~"{deployment_name}-.*"}}) by (pod)'
+        else:
+            query = f'sum(container_memory_usage_bytes{{cluster="", namespace="default"}}) by (pod)'
+        
+        query_result = self.prom.custom_query(query=query)
+        
+        memory_usages = []
+        for result in query_result:
+            pod_name = result['metric']['pod']
+            memory_usages.append(PodMemoryUsage(pod_name, float(result['value'][1]) / 1024 / 1024, float(result['value'][0]) / 1024 / 1024, pod_name.split('-')[0]))
+            
+        return memory_usages

@@ -10,6 +10,7 @@ from ..utils.constants import (
 )
 
 import math
+from typing import Set
 
 
 scaler = HorizontalScaler()
@@ -17,50 +18,61 @@ scaler = HorizontalScaler()
 '''
 Implementing the base rule-based autoscaler for the CPU usage metric.
 '''
-def check_deployments_cpu_usage():
+def check_deployments_cpu_usage(not_to_check=set()) -> Set[str]:
     Logger.info("Checking deployments CPU usage")
+
+    scaled_deploys = set()
 
     d_monitor = DeploymentsMonitor()
     p_monitor = PodsMonitor()
+
     deployments = d_monitor.get_all_deployments()
     
     pods_u = p_monitor.get_pods_cpu_usage()
     pods_r = p_monitor.get_pods_cpu_resource()
 
     deployments_utilization = d_monitor.get_deployments_total_cpu_utilization(pods_u, pods_r)
-    deployments_cpu_usage = d_monitor.get_deployments_average_cpu_usage()
 
     for deployment in deployments:
+        if deployment.name in not_to_check:
+            continue
+
         if deployment.name in deployments_utilization:
             required_replicas = math.ceil(deployments_utilization[deployment.name] / SCALING_OUT_CPU_THRESHOLD)
-            deployment_cpu_usage = deployments_cpu_usage[deployment.name].average_cpu_usage
 
             if required_replicas > deployment.ready_replicas:
-                # Avoiding ping-pong effect
-                if abs((deployment_cpu_usage / 1000) / SCALING_OUT_CPU_THRESHOLD - 1) > PING_PONG_EFFECT_THRESHOLD:
-                    Logger.warning(f"Required replicas for deployment {deployment.name} is {required_replicas} which is higher than {SCALING_OUT_CPU_THRESHOLD}")
-                    scaler.set_replica_num(required_replicas, deployment.name)
+                Logger.warning(f"Required replicas for deployment {deployment.name} is {required_replicas} which is higher than {SCALING_OUT_CPU_THRESHOLD}")
+                scaler.set_replica_num(required_replicas, deployment.name)
+                scaled_deploys.add(deployment.name)
+
+    return scaled_deploys
 
 
-def check_deployments_memory_usage():
+def check_deployments_memory_usage(not_to_check=set()) -> Set[str]:
     Logger.info("Checking deployments memory usage")
 
+    scaled_deploys = set()
+
     d_monitor = DeploymentsMonitor()
+    p_monitor = PodsMonitor()
+
     deployments = d_monitor.get_all_deployments()
-    deployments_memory_usage = d_monitor.get_deployments_average_memory_usage()
+    
+    pods_u = p_monitor.get_pods_memory_usage()
+    pods_r = p_monitor.get_pods_memory_resource()
+
+    deployments_utilization = d_monitor.get_deployments_total_memory_utilization(pods_u, pods_r)
 
     for deployment in deployments:
-        if deployment.name in deployments_memory_usage:
-            memory_usage = deployments_memory_usage[deployment.name].average_memory_usage
-            if (memory_usage / deployment.memory_limit) > SCALING_OUT_MEMORY_THRESHOLD:
-                # Avoiding ping-pong effect
-                if abs(memory_usage / deployment.memory_limit - 1) > PING_PONG_EFFECT_THRESHOLD:
-                    Logger.warning(f"Memory usage of deployment {deployment.name} is {memory_usage} which is higher than {SCALING_OUT_MEMORY_THRESHOLD}")
-                    scaler.set_replica_num(deployment.ready_replicas + 1, deployment.name)
-            elif (memory_usage / deployment.memory_limit) < SCALING_IN_MEMORY_THRESHOLD:
-                if deployment.ready_replicas <= 1:
-                    continue
+        if deployment.name in not_to_check:
+            continue
 
-                # if abs(cpu_usage / deployment.cpu_limit - 1) > PING_PONG_EFFECT_THRESHOLD:
-                #     Logger.warning(f"CPU usage of deployment {deployment.name} is {cpu_usage} which is lower than {SCALING_IN_CPU_THRESHOLD}")
-                #     scaler.set_replica_num(deployment.ready_replicas + 1, deployment.name)
+        if deployment.name in deployments_utilization:
+            required_replicas = math.ceil(deployments_utilization[deployment.name] / SCALING_OUT_MEMORY_THRESHOLD)
+
+            if required_replicas > deployment.ready_replicas:
+                Logger.warning(f"Required replicas for deployment {deployment.name} is {required_replicas} which is higher than {SCALING_OUT_MEMORY_THRESHOLD}")
+                scaler.set_replica_num(required_replicas, deployment.name)
+                scaled_deploys.add(deployment.name)
+
+    return scaled_deploys
