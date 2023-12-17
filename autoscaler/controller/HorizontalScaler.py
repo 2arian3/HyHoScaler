@@ -34,7 +34,7 @@ class HorizontalScaler:
         api_response.spec.replicas = replicas_number
         self.api_instance.patch_namespaced_deployment_scale(deployment_name, deployment_ns, api_response)
 
-    
+
     def _default_replicas(self):
         d_monitor = DeploymentsMonitor()
         deployments = d_monitor.get_all_deployments()

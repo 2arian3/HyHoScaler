@@ -32,13 +32,16 @@ class PodsMonitor:
 
         cpu_resources = []
         for pod in pods:
+            if pod.status.phase != 'Running':
+                continue
+
             if pod.spec.containers[0].resources.requests and 'cpu' in pod.spec.containers[0].resources.requests \
                 and pod.spec.containers[0].resources.limits and 'cpu' in pod.spec.containers[0].resources.limits:
                 converted_cpu_request = float(pod.spec.containers[0].resources.requests['cpu'].replace('m', ''))
                 converted_cpu_limit = float(pod.spec.containers[0].resources.limits['cpu'].replace('m', ''))
                 cpu_resources.append(PodCpuResource(pod.metadata.name, converted_cpu_request, converted_cpu_limit, pod.metadata.name.split('-')[0], pod.metadata.namespace))
             else:
-                cpu_resources.append(PodCpuResource(pod.metadata.name, None, None, pod.metadata.name.split('-')[0], pod.metadata.namespace))
+                cpu_resources.append(PodCpuResource(pod.metadata.name, 64, 128, pod.metadata.name.split('-')[0], pod.metadata.namespace))
 
         return cpu_resources
     
@@ -49,13 +52,16 @@ class PodsMonitor:
 
         memory_resources = []
         for pod in pods:
+            if pod.status.phase != 'Running':
+                continue
+    
             if pod.spec.containers[0].resources.requests and 'memory' in pod.spec.containers[0].resources.requests \
                 and pod.spec.containers[0].resources.limits and 'memory' in pod.spec.containers[0].resources.limits:
                 converted_memory_request = float(pod.spec.containers[0].resources.requests['memory'].replace('Gi', '')) * 1024 if 'Gi' in pod.spec.containers[0].resources.requests['memory'] else float(pod.spec.containers[0].resources.requests['memory'].replace('Mi', ''))
                 converted_memory_limit = float(pod.spec.containers[0].resources.limits['memory'].replace('Gi', '')) * 1024 if 'Gi' in pod.spec.containers[0].resources.requests['memory'] else float(pod.spec.containers[0].resources.requests['memory'].replace('Mi', ''))
                 memory_resources.append(PodMemoryResource(pod.metadata.name, converted_memory_request, converted_memory_limit, pod.metadata.name.split('-')[0], pod.metadata.namespace))
             else:
-                memory_resources.append(PodMemoryResource(pod.metadata.name, None, None, pod.metadata.name.split('-')[0], pod.metadata.namespace))
+                memory_resources.append(PodMemoryResource(pod.metadata.name, 100, 200, pod.metadata.name.split('-')[0], pod.metadata.namespace))
 
         return memory_resources
 
@@ -82,9 +88,9 @@ class PodsMonitor:
 
     def get_pods_cpu_usage(self, deployment_name=None) -> List[PodCpuUsage]:
         if deployment_name:
-            query = f'sum(irate(container_cpu_usage_seconds_total{{cluster="", namespace="default", pod=~"{deployment_name}-.*"}}[2m])) by (pod)'
+            query = f'sum(irate(container_cpu_usage_seconds_total{{cluster="", namespace="default", pod=~"{deployment_name}-.*"}}[1m])) by (pod)'
         else:
-            query = f'sum(irate(container_cpu_usage_seconds_total{{cluster="", namespace="default"}}[2m])) by (pod)'
+            query = f'sum(irate(container_cpu_usage_seconds_total{{cluster="", namespace="default"}}[1m])) by (pod)'
         
         query_result = self.prom.custom_query(query=query)
         
