@@ -4,7 +4,11 @@ HyHoScaler is a tool developed for horizontal scaling in Dockerized microservice
 
 ## Architecture
 
-We chose Python 3 for the implementation, leveraging its libraries to simplify the development process. The tool is Dockerized, facilitating deployment on any k8s cluster. HyHoScaler's architecture is based on the MAPE (Monitoring, Analysis, Planning, Execution) loop and comprises four interconnected components:
+We chose Python3 for the implementation, leveraging its libraries to simplify the development process. The tool is Dockerized, facilitating deployment on any k8s cluster. HyHoScaler's architecture is based on the MAPE (Monitoring, Analysis, Planning, Execution) loop and comprises four interconnected components:
+
+<p align="center">
+    <img src="System-Architecture.png" alt="System-Architecture" width="50%"/>
+</p>
 
 - **Monitor:** Gathers pod information and status from the control plane, collecting metrics such as total CPU and memory usage, requested CPU and memory, and resource limits.
 
@@ -31,6 +35,24 @@ We conducted three controlled trials with comparable workloads, each lasting 10 
 2. **HyHoScaler<sub>CPU</sub>:** HyHoScaler focusing on CPU usage. Resulted in a 12.5% improvement in the 95th percentile of response time with no system failures.
 
 3. **HyHoScaler<sub>CPU + MEM</sub>:** Comprehensive evaluation with both CPU and memory monitoring. Achieved a significant 37.5% reduction in the 95th percentile of response time compared to default k8s HPA.
+
+
+<p align="center">
+  <figure style="position:relative; text-align:center">
+    <img src="results/Kubernetes Auto HPA.png" alt="k8s HPA" width="70%" style="margin-right: 20px; margin-top: 15px"/>
+    <figcaption style="position:absolute; top:0; left:0; width:100%;">Autoscaling with k8s HPA</figcaption>
+  </figure>
+  
+  <figure style="position:relative; text-align:center; margin: 0 20px">
+    <img src="results/HyScaler with only CPU.png" alt="HyHoScaler_CPU" width="70%" style="margin-right: 20px; margin-top: 15px"/>
+    <figcaption style="position:absolute; top:0; left:0; width:100%;">Autoscaling with HyHoScaler only monitoring CPU usage</figcaption>
+  </figure>
+  
+  <figure style="position:relative; text-align:center">
+    <img src="results/HyScaler with CPU and Memory.png" alt="HyHoScaler_CPU+MEM" width="70%" style="margin-top: 15px"/>
+    <figcaption style="position:absolute; top:0; left:0; width:100%;">Autoscaling with HyHoScaler monitoring CPU and memory usage</figcaption>
+  </figure>
+</p>
 
 ## Conclusion
 
