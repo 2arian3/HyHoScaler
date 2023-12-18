@@ -46,7 +46,7 @@ docker run --name autoscaler HyHoScaler:1.0
 ```
 
 ## Load Test
-We used a modeified version of [Locust](https://github.com/pacslab/pacs_locust). You can run the load test using the following commands:
+We used a modified version of [Locust](https://github.com/pacslab/pacs_locust). You can run the load test using the following commands:
 
 ```
 git clone https://github.com/2arian3/HyHoScaler.git
