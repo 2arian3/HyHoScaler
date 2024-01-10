@@ -1,4 +1,4 @@
-FROM python:3.11-slim-bookworm AS build
+FROM python:3.11.7-bookworm AS build
 
 RUN python3 -m venv /opt/venv
 ENV PATH /opt/venv/bin:$PATH
@@ -8,7 +8,7 @@ COPY requirements.txt .
 RUN pip3 install -r requirements.txt
 
 
-FROM python:3.11-slim-bookworm AS target
+FROM python:3.11.7-bookworm AS target
 
 COPY --from=build /opt/venv /opt/venv
 ENV PATH /opt/venv/bin:$PATH
